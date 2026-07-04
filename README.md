@@ -21,6 +21,8 @@ The reference system covers the core commerce flow: catalog, pricing, inventory,
 
 - [Architecture](docs/architecture.md)
 - [Delivery roadmap](ROADMAP.md)
+- [Delivery plan](PLAN.md)
+- [Architecture diagrams](docs/diagrams.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 
