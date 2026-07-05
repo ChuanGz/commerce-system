@@ -43,6 +43,8 @@ The application applies its migration, seeds one reference product, and exposes:
 
 - `GET /health`
 - `GET /api/products/9d67986b-9500-4527-858a-3118d1ac6a90`
+- `POST /api/checkouts` with an `Idempotency-Key` header
+- `GET /api/orders/{orderId}/timeline`
 - `/swagger`
 
 Run the evidence suite with:

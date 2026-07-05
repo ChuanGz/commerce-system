@@ -25,6 +25,25 @@ public sealed class CommerceApiFactory : WebApplicationFactory<Program>, IAsyncL
 
     public Task InitializeAsync() => Task.CompletedTask;
 
+    public async Task<Guid> AddProductAsync(int stock = 10)
+    {
+        var id = Guid.NewGuid();
+        await using var scope = Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CommerceDbContext>();
+        db.Products.Add(new Commerce.Api.Modules.Catalog.Product
+        {
+            Id = id,
+            Name = "Test Product",
+            UnitPrice = 42.50m,
+            Currency = "USD",
+            AvailableQuantity = stock,
+            Version = 1,
+            IsActive = true
+        });
+        await db.SaveChangesAsync();
+        return id;
+    }
+
     async Task IAsyncLifetime.DisposeAsync()
     {
         await _connection.DisposeAsync();

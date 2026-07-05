@@ -1,5 +1,6 @@
 using Commerce.Api.Infrastructure;
 using Commerce.Api.Modules.Catalog;
+using Commerce.Api.Modules.Ordering;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddHealthChecks().AddDbContextCheck<CommerceDbContext>();
 builder.Services.AddDbContext<CommerceDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Commerce")
         ?? "Data Source=commerce.db"));
+builder.Services.AddScoped<CheckoutService>();
 
 var app = builder.Build();
 
@@ -49,6 +51,58 @@ app.MapGet("/api/products/{id:guid}", async (
 .WithName("GetProduct")
 .Produces<ProductResponse>()
 .ProducesProblem(StatusCodes.Status404NotFound);
+
+app.MapPost("/api/checkouts", async (
+    CheckoutRequest request,
+    HttpContext context,
+    CheckoutService checkout,
+    CancellationToken cancellationToken) =>
+{
+    if (!context.Request.Headers.TryGetValue("Idempotency-Key", out var key))
+    {
+        return Results.Problem("Idempotency-Key header is required.", statusCode: 400);
+    }
+
+    var result = await checkout.CheckoutAsync(
+        request,
+        key.ToString(),
+        context.TraceIdentifier,
+        cancellationToken);
+    return result.Value is not null
+        ? Results.Ok(result.Value)
+        : Results.Problem(result.Error, statusCode: result.StatusCode);
+})
+.WithName("Checkout")
+.Produces<CheckoutResponse>()
+.ProducesProblem(400)
+.ProducesProblem(404)
+.ProducesProblem(409);
+
+app.MapGet("/api/orders/{id:guid}/timeline", async (
+    Guid id,
+    CommerceDbContext db,
+    CancellationToken cancellationToken) =>
+{
+    var order = await db.Orders
+        .AsNoTracking()
+        .Include(item => item.Timeline)
+        .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+    return order is null
+        ? Results.NotFound()
+        : Results.Ok(new OrderTimelineResponse(
+            order.Id,
+            order.Status,
+            order.Timeline.OrderBy(item => item.OccurredAt)
+                .Select(item => new TimelineEntryResponse(
+                    item.Event,
+                    item.Detail,
+                    item.CorrelationId,
+                    item.OccurredAt))
+                .ToList()));
+})
+.WithName("GetOrderTimeline")
+.Produces<OrderTimelineResponse>()
+.ProducesProblem(404);
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
