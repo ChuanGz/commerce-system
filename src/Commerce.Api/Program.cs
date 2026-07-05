@@ -29,6 +29,24 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");
 
+static IResult? RequireApiKey(HttpContext context, IConfiguration configuration)
+{
+    var expected = configuration["Commerce:ApiKey"];
+    if (string.IsNullOrWhiteSpace(expected))
+    {
+        return Results.Problem(
+            "Mutation API is disabled until Commerce__ApiKey is configured.",
+            statusCode: 503);
+    }
+
+    return context.Request.Headers.TryGetValue("X-API-Key", out var provided)
+        && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.UTF8.GetBytes(provided.ToString()),
+            System.Text.Encoding.UTF8.GetBytes(expected))
+        ? null
+        : Results.Unauthorized();
+}
+
 app.MapGet("/api/products/{id:guid}", async (
     Guid id,
     CommerceDbContext db,
@@ -55,9 +73,16 @@ app.MapGet("/api/products/{id:guid}", async (
 app.MapPost("/api/checkouts", async (
     CheckoutRequest request,
     HttpContext context,
+    IConfiguration configuration,
     CheckoutService checkout,
     CancellationToken cancellationToken) =>
 {
+    var denied = RequireApiKey(context, configuration);
+    if (denied is not null)
+    {
+        return denied;
+    }
+
     if (!context.Request.Headers.TryGetValue("Idempotency-Key", out var key))
     {
         return Results.Problem("Idempotency-Key header is required.", statusCode: 400);
@@ -80,9 +105,17 @@ app.MapPost("/api/checkouts", async (
 
 app.MapGet("/api/orders/{id:guid}/timeline", async (
     Guid id,
+    HttpContext context,
+    IConfiguration configuration,
     CommerceDbContext db,
     CancellationToken cancellationToken) =>
 {
+    var denied = RequireApiKey(context, configuration);
+    if (denied is not null)
+    {
+        return denied;
+    }
+
     var order = await db.Orders
         .AsNoTracking()
         .Include(item => item.Timeline)

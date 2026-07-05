@@ -36,15 +36,16 @@ Requires the .NET 8 SDK.
 
 ```bash
 dotnet tool restore
-dotnet run --project src/Commerce.Api
+Commerce__ApiKey='replace-with-a-local-secret' \
+  dotnet run --project src/Commerce.Api
 ```
 
 The application applies its migration, seeds one reference product, and exposes:
 
 - `GET /health`
 - `GET /api/products/9d67986b-9500-4527-858a-3118d1ac6a90`
-- `POST /api/checkouts` with an `Idempotency-Key` header
-- `GET /api/orders/{orderId}/timeline`
+- `POST /api/checkouts` with `Idempotency-Key` and `X-API-Key` headers
+- `GET /api/orders/{orderId}/timeline` with an `X-API-Key` header
 - `/swagger`
 
 Run the evidence suite with:

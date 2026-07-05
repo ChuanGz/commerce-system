@@ -15,6 +15,7 @@ public sealed class CommerceApiFactory : WebApplicationFactory<Program>, IAsyncL
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         _connection.Open();
+        builder.UseSetting("Commerce:ApiKey", "integration-test-key");
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<CommerceDbContext>>();

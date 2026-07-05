@@ -52,8 +52,10 @@ public sealed class ApiTests(CommerceApiFactory factory)
         var accepted = await first.Content.ReadFromJsonAsync<CheckoutResponse>();
         using var replay = await PostCheckoutAsync(request, "intent-1");
         var replayed = await replay.Content.ReadFromJsonAsync<CheckoutResponse>();
-        using var timeline = await _client.GetAsync(
-            $"/api/orders/{accepted!.OrderId}/timeline");
+        using var timeline = await _client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Get,
+                $"/api/orders/{accepted!.OrderId}/timeline"));
         var events = await timeline.Content.ReadFromJsonAsync<OrderTimelineResponse>();
 
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
@@ -110,6 +112,17 @@ public sealed class ApiTests(CommerceApiFactory factory)
         Assert.Equal(OrderStatus.PaymentUncertain, order!.Status);
     }
 
+    [Fact]
+    public async Task Checkout_without_api_key_is_rejected()
+    {
+        var productId = await factory.AddProductAsync();
+        using var response = await _client.PostAsJsonAsync(
+            "/api/checkouts",
+            new CheckoutRequest("customer-5", productId, 1, 1));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private Task<HttpResponseMessage> PostCheckoutAsync(
         CheckoutRequest request,
         string idempotencyKey)
@@ -119,6 +132,16 @@ public sealed class ApiTests(CommerceApiFactory factory)
             Content = JsonContent.Create(request)
         };
         message.Headers.Add("Idempotency-Key", idempotencyKey);
+        message.Headers.Add("X-API-Key", "integration-test-key");
         return _client.SendAsync(message);
+    }
+
+    private static HttpRequestMessage CreateAuthorizedRequest(
+        HttpMethod method,
+        string path)
+    {
+        var message = new HttpRequestMessage(method, path);
+        message.Headers.Add("X-API-Key", "integration-test-key");
+        return message;
     }
 }
