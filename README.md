@@ -27,6 +27,7 @@ The reference system covers the core commerce flow: catalog, pricing, inventory,
 - [Architecture diagrams](docs/diagrams.md)
 - [Domain baseline](docs/domain-baseline.md)
 - [Implementation stack decision](docs/decisions/0001-implementation-stack.md)
+- [Checkout recovery runbook](docs/runbooks/checkout-recovery.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 
