@@ -4,7 +4,9 @@ A reference e-commerce system for studying architecture evolution from a modular
 
 ## Status
 
-The repository is in its initial design stage. It currently defines scope, architecture boundaries, and delivery gates; it does not yet contain a runnable application.
+Milestone 0 is complete: the implementation stack, domain ownership, invariants,
+trust boundary, service objectives, and acceptance scenarios are recorded. The
+runnable walking skeleton is the next evidence gate.
 
 ## Architecture direction
 
@@ -23,12 +25,15 @@ The reference system covers the core commerce flow: catalog, pricing, inventory,
 - [Delivery roadmap](ROADMAP.md)
 - [Delivery plan](PLAN.md)
 - [Architecture diagrams](docs/diagrams.md)
+- [Domain baseline](docs/domain-baseline.md)
+- [Implementation stack decision](docs/decisions/0001-implementation-stack.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 
 ## Setup and usage
 
-No runtime setup is available yet. Read the architecture and roadmap documents to review the intended system boundaries and implementation sequence.
+Runtime setup will become available with the walking skeleton. Until then,
+review the domain baseline and stack decision before the broader roadmap.
 
 ## License
 
