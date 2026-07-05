@@ -1,16 +1,18 @@
 name: CI
 
 on:
-  pull_request:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  repository:
+  build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
       - uses: DavidAnson/markdownlint-cli2-action@v23
@@ -20,3 +22,9 @@ jobs:
         with:
           args: --no-progress --max-retries 2 "**/*.md"
           fail: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore Commerce.sln --locked-mode
+      - run: dotnet build Commerce.sln --configuration Release --no-restore
+      - run: dotnet test Commerce.sln --configuration Release --no-build

@@ -4,9 +4,9 @@ A reference e-commerce system for studying architecture evolution from a modular
 
 ## Status
 
-Milestone 0 is complete: the implementation stack, domain ownership, invariants,
-trust boundary, service objectives, and acceptance scenarios are recorded. The
-runnable walking skeleton is the next evidence gate.
+Milestone 0 is complete. The walking skeleton now provides a migrated SQLite
+database, database-backed health check, correlation IDs, OpenAPI, and a versioned
+product query. Checkout mutation and failure evidence remain the next gate.
 
 ## Architecture direction
 
@@ -30,10 +30,29 @@ The reference system covers the core commerce flow: catalog, pricing, inventory,
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 
-## Setup and usage
+## Run locally
 
-Runtime setup will become available with the walking skeleton. Until then,
-review the domain baseline and stack decision before the broader roadmap.
+Requires the .NET 8 SDK.
+
+```bash
+dotnet tool restore
+dotnet run --project src/Commerce.Api
+```
+
+The application applies its migration, seeds one reference product, and exposes:
+
+- `GET /health`
+- `GET /api/products/9d67986b-9500-4527-858a-3118d1ac6a90`
+- `/swagger`
+
+Run the evidence suite with:
+
+```bash
+dotnet test Commerce.sln
+```
+
+The local `commerce.db` file is disposable reference data and is excluded from
+version control.
 
 ## License
 
